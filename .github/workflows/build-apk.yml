@@ -1,0 +1,47 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'game/**'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Copy game to assets
+        run: |
+          mkdir -p game/android/app/src/main/assets
+          cp game/index.html game/android/app/src/main/assets/index.html
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x game/android/gradlew
+
+      - name: Build APK
+        working-directory: game/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Rename APK
+        run: cp game/android/app/build/outputs/apk/release/*.apk IronSquad-v1.0.0.apk 2>/dev/null || cp game/android/app/build/outputs/apk/debug/*.apk IronSquad-v1.0.0.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: IronSquad-APK
+          path: IronSquad-v1.0.0.apk
+          retention-days: 30
