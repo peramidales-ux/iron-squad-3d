@@ -21,30 +21,47 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Copy game to assets
+      - name: Generate game assets (508MB)
         run: |
-          mkdir -p android/app/src/main/assets
+          echo "=== Generating 508MB of game assets ==="
+          cd assets
+          python3 gen.py
+          python3 gen_large.py
+          cd ..
+          echo "Assets generated:"
+          du -sh assets/
+
+      - name: Download Three.js
+        run: |
+          curl -sL "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" -o assets/three.module.js
+          ls -lh assets/three.module.js
+
+      - name: Bundle all assets
+        run: |
+          mkdir -p android/app/src/main/assets/textures
+          mkdir -p android/app/src/main/assets/audio
+          mkdir -p android/app/src/main/assets/models
           cp index.html android/app/src/main/assets/index.html
-          echo "Game copied successfully"
-          ls -la android/app/src/main/assets/
+          cp assets/three.module.js android/app/src/main/assets/three.module.js
+          cp -r assets/textures/* android/app/src/main/assets/textures/
+          cp -r assets/audio/* android/app/src/main/assets/audio/
+          cp -r assets/models/* android/app/src/main/assets/models/
+          echo "=== Bundled assets ==="
+          du -sh android/app/src/main/assets/
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
       - name: Build Debug APK
         working-directory: android
-        run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace
-          echo "Build output:"
-          find . -name "*.apk" -type f
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
         run: |
           APK_PATH=$(find android -name "*.apk" -type f | head -1)
           if [ -n "$APK_PATH" ]; then
             cp "$APK_PATH" IronSquad-v1.0.0.apk
-            echo "APK ready: IronSquad-v1.0.0.apk"
-            ls -la IronSquad-v1.0.0.apk
+            echo "APK ready: $(ls -lh IronSquad-v1.0.0.apk | awk '{print $5}')"
           else
             echo "ERROR: No APK found!"
             exit 1
