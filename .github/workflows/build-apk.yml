@@ -51,7 +51,7 @@ jobs:
               return os.path.getsize(path)
           sr = 44100
           total = 0
-          for i in range(25):
+          for i in range(40):
               bpm = 120 + i * 3
               def gen(t, bpm=bpm):
                   b = t * bpm / 60
