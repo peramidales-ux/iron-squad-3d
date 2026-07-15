@@ -21,30 +21,49 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate game assets
+      - name: Generate audio + textures
         run: |
-          echo "=== Generating game assets ==="
+          echo "=== Generating audio and textures ==="
           cd assets
           python3 gen.py
           cd ..
-          echo "Assets generated:"
-          du -sh assets/
+          du -sh assets/audio/ assets/textures/
 
       - name: Download Three.js
         run: |
           curl -sL "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" -o assets/three.module.js
-          ls -lh assets/three.module.js
+
+      - name: Download 3D models
+        run: |
+          echo "=== Downloading 3D models ==="
+          mkdir -p assets/models/{characters,environment,maps,weapons}
+
+          # Kenney FPS Kit
+          curl -sL "https://github.com/KenneyNL/Starter-Kit-FPS/archive/refs/heads/main.zip" -o /tmp/kenney.zip --max-time 60
+          unzip -o /tmp/kenney.zip -d /tmp/kenney/ 2>/dev/null
+          cp /tmp/kenney/Starter-Kit-FPS-main/models/*.glb assets/models/environment/ 2>/dev/null
+          cp /tmp/kenney/Starter-Kit-FPS-main/models/enemy*.glb assets/models/characters/ 2>/dev/null
+
+          # KhronosGroup samples
+          curl -sL "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb" -o assets/models/environment/helmet.glb --max-time 30
+          curl -sL "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/Avocado/glTF-Binary/Avocado.glb" -o assets/models/environment/avocado.glb --max-time 30
+          curl -sL "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/BarramundiFish/glTF-Binary/BarramundiFish.glb" -o assets/models/environment/fish.glb --max-time 30
+          curl -sL "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/CesiumMan/glTF-Binary/CesiumMan.glb" -o assets/models/characters/cesium_man.glb --max-time 30
+          curl -sL "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/Fox/glTF-Binary/Fox.glb" -o assets/models/characters/fox.glb --max-time 30
+          curl -sL "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/Sponza/glTF-Binary/Sponza.glb" -o assets/models/maps/sponza.glb --max-time 60
+          curl -sL "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/MetalRoughSpheres/glTF-Binary/MetalRoughSpheres.glb" -o assets/models/environment/metal_spheres.glb --max-time 30
+
+          echo "Models downloaded:"
+          find assets/models -name "*.glb" -exec ls -lh {} \;
 
       - name: Bundle all assets
         run: |
-          mkdir -p android/app/src/main/assets/textures
-          mkdir -p android/app/src/main/assets/audio
-          mkdir -p android/app/src/main/assets/models
+          mkdir -p android/app/src/main/assets/{textures,audio,models/{characters,environment,maps,weapons}}
           cp index.html android/app/src/main/assets/index.html
           cp assets/three.module.js android/app/src/main/assets/three.module.js
-          cp -r assets/textures/* android/app/src/main/assets/textures/
-          cp -r assets/audio/* android/app/src/main/assets/audio/
-          cp -r assets/models/* android/app/src/main/assets/models/
+          cp -r assets/textures/* android/app/src/main/assets/textures/ 2>/dev/null
+          cp -r assets/audio/* android/app/src/main/assets/audio/ 2>/dev/null
+          cp -r assets/models/* android/app/src/main/assets/models/ 2>/dev/null
           echo "=== Bundled assets ==="
           du -sh android/app/src/main/assets/
 
