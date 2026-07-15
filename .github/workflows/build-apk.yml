@@ -3,9 +3,6 @@ name: Build APK
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'game/**'
-      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
 jobs:
@@ -26,18 +23,32 @@ jobs:
 
       - name: Copy game to assets
         run: |
-          mkdir -p game/android/app/src/main/assets
-          cp game/index.html game/android/app/src/main/assets/index.html
+          mkdir -p android/app/src/main/assets
+          cp index.html android/app/src/main/assets/index.html
+          echo "Game copied successfully"
+          ls -la android/app/src/main/assets/
 
       - name: Grant execute permission for gradlew
-        run: chmod +x game/android/gradlew
+        run: chmod +x android/gradlew
 
-      - name: Build APK
-        working-directory: game/android
-        run: ./gradlew assembleRelease --no-daemon
+      - name: Build Debug APK
+        working-directory: android
+        run: |
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          echo "Build output:"
+          find . -name "*.apk" -type f
 
       - name: Rename APK
-        run: cp game/android/app/build/outputs/apk/release/*.apk IronSquad-v1.0.0.apk 2>/dev/null || cp game/android/app/build/outputs/apk/debug/*.apk IronSquad-v1.0.0.apk
+        run: |
+          APK_PATH=$(find android -name "*.apk" -type f | head -1)
+          if [ -n "$APK_PATH" ]; then
+            cp "$APK_PATH" IronSquad-v1.0.0.apk
+            echo "APK ready: IronSquad-v1.0.0.apk"
+            ls -la IronSquad-v1.0.0.apk
+          else
+            echo "ERROR: No APK found!"
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
