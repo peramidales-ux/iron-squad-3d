@@ -35,11 +35,8 @@ android {
         }
     }
 
-    // Keep assets uncompressed to maintain 500MB+ APK size
-    android {
-        aaptOptions {
-            noCompress "wav", "mp3", "ogg", "png", "jpg", "glb", "gltf", "js"
-        }
+    aaptOptions {
+        noCompress "wav", "mp3", "ogg", "png", "jpg", "glb", "gltf", "js"
     }
 }
 
