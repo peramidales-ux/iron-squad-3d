@@ -21,12 +21,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate game assets (508MB)
+      - name: Generate game assets
         run: |
-          echo "=== Generating 508MB of game assets ==="
+          echo "=== Generating game assets ==="
           cd assets
           python3 gen.py
-          python3 gen_large.py
           cd ..
           echo "Assets generated:"
           du -sh assets/
