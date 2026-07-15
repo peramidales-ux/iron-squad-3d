@@ -21,50 +21,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate base audio + textures
+      - name: Generate game audio + textures
         run: |
           cd assets
           python3 gen.py
           cd ..
-
-      - name: Generate extra music for 500MB+ APK
-        run: |
-          python3 -c "
-          import struct, math, random, os
-          def create_wav(path, sr, dur, func):
-              n = int(sr * dur)
-              raw = bytearray()
-              for i in range(n):
-                  t = i / sr
-                  v = max(-1.0, min(1.0, func(t)))
-                  raw.extend(struct.pack('<h', int(v * 32767)))
-              with open(path, 'wb') as f:
-                  ds = len(raw)
-                  f.write(b'RIFF')
-                  f.write(struct.pack('<I', 36 + ds))
-                  f.write(b'WAVE')
-                  f.write(b'fmt ')
-                  f.write(struct.pack('<IHHIIHH', 16, 1, 1, sr, sr*2, 2, 16))
-                  f.write(b'data')
-                  f.write(struct.pack('<I', ds))
-                  f.write(raw)
-              return os.path.getsize(path)
-          sr = 44100
-          total = 0
-          for i in range(40):
-              bpm = 120 + i * 3
-              def gen(t, bpm=bpm):
-                  b = t * bpm / 60
-                  kick = max(0, math.sin(2*math.pi*55*t)*math.exp(-(b%1)*8)) * 0.35
-                  snare = random.uniform(-1,1)*0.12*math.exp(-((b+0.5)%1)*15) if((b+0.5)%1)<0.04 else 0
-                  bass = math.sin(2*math.pi*(55+i*5)*t)*0.15*(0.5+0.5*math.sin(2*math.pi*0.25*t))
-                  pad = math.sin(2*math.pi*(110+i*10)*t)*0.06*(0.5+0.5*math.sin(2*math.pi*0.05*t))
-                  return max(-1, min(1, kick + snare + bass + pad))
-              name = f'assets/audio/music/extra_{i:02d}.wav'
-              sz = create_wav(name, sr, 180, gen)
-              total += sz
-          print(f'Extra music: {total//1024//1024}MB')
-          "
 
       - name: Download Three.js
         run: curl -sL "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" -o assets/three.module.js
@@ -87,7 +48,6 @@ jobs:
           cp -r assets/textures/* android/app/src/main/assets/textures/ 2>/dev/null
           cp -r assets/audio/* android/app/src/main/assets/audio/ 2>/dev/null
           cp -r assets/models/* android/app/src/main/assets/models/ 2>/dev/null
-          echo "=== Total assets ==="
           du -sh android/app/src/main/assets/
 
       - name: Grant execute permission for gradlew
