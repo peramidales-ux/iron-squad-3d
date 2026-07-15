@@ -1,0 +1,10 @@
+# Large assets (generated during build)
+assets/textures/
+assets/audio/
+assets/models/
+android/app/src/main/assets/textures/
+android/app/src/main/assets/audio/
+android/app/src/main/assets/models/
+android/app/src/main/assets/three.module.js
+*.zip
+tmp/
